@@ -5,9 +5,8 @@ const http = require("http");
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
 const path = require("path");
-const mysql = require("mysql2");
 
-// Express + WS setup
+// Express + WebSocket setup
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -15,20 +14,7 @@ const wss = new WebSocket.Server({ server });
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ MySQL Connection
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",        // change if you set another user
-  password: "Yamjam@2020",        // your MySQL password
-  database: "smart_chair"
-});
-
-db.connect((err) => {
-  if (err) throw err;
-  console.log("✅ Connected to MySQL Database");
-});
-
-// Latest data cache
+// Latest data cache (in memory)
 let latestData = {
   timestamp: new Date().toISOString(),
   heartRate: 0,
@@ -36,13 +22,13 @@ let latestData = {
   sugarLevel: 0
 };
 
-// WebSocket connections
+// Handle WebSocket connections
 wss.on("connection", (ws) => {
   console.log("🔗 New WebSocket client connected");
-  ws.send(JSON.stringify(latestData));
+  ws.send(JSON.stringify(latestData)); // send the current data immediately
 });
 
-// POST /data → receive sensor readings
+// POST /data → receive data from AJAX or frontend
 app.post("/data", (req, res) => {
   const { heartRate, temperature, sugarLevel } = req.body;
 
@@ -55,14 +41,7 @@ app.post("/data", (req, res) => {
 
   console.log("📥 Data Received:", latestData);
 
-  // Save into MySQL
-  const sql = "INSERT INTO readings (heartRate, temperature, sugarLevel) VALUES (?, ?, ?)";
-  db.query(sql, [latestData.heartRate, latestData.temperature, latestData.sugarLevel], (err) => {
-    if (err) throw err;
-    console.log("💾 Data saved to MySQL");
-  });
-
-  // Broadcast to WebSocket clients
+  // Send data to all WebSocket clients (live update)
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify(latestData));
@@ -72,21 +51,13 @@ app.post("/data", (req, res) => {
   res.json({ status: "success", data: latestData });
 });
 
-// GET /data → latest reading
+// GET /data → get the latest data
 app.get("/data", (req, res) => {
   res.json(latestData);
 });
 
-// GET /reports → all saved readings
-app.get("/reports", (req, res) => {
-  db.query("SELECT * FROM readings ORDER BY timestamp DESC LIMIT 50", (err, results) => {
-    if (err) throw err;
-    res.json(results);
-  });
-});
-
 // Start server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
