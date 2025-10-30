@@ -1,7 +1,18 @@
 // app.js (Frontend)
 
-// Connect to WebSocket server (adjust URL if needed)
-const socket = new WebSocket("ws://localhost:3000");
+// ✅ Auto-detect backend URL
+const baseUrl =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://medicchair.onrender.com";
+
+// ✅ Connect to WebSocket server dynamically
+const socketProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const socketHost =
+  window.location.hostname === "localhost"
+    ? "localhost:3000"
+    : "medicchair.onrender.com";
+const socket = new WebSocket(`${socketProtocol}//${socketHost}`);
 
 // DOM elements
 const heartRateEl = document.getElementById("heartRate");
@@ -15,7 +26,7 @@ let heartRateChart, tempChart, sugarChart;
 
 // When connected
 socket.onopen = () => {
-  console.log("Connected to WebSocket server ✅");
+  console.log("✅ Connected to WebSocket server");
 };
 
 // When receiving new sensor data
@@ -69,9 +80,9 @@ function checkAlerts(heartRate, temperature, sugarLevel) {
   if (sugarLevel > 180) alerts.push(`🩸 High Sugar Level: ${sugarLevel} mg/dL`);
 
   if (alerts.length > 0) {
-    alertBox.innerHTML = alerts.map(msg =>
-      `<div class="alert alert-danger">${msg}</div>`
-    ).join("");
+    alertBox.innerHTML = alerts
+      .map((msg) => `<div class="alert alert-danger">${msg}</div>`)
+      .join("");
   } else {
     alertBox.innerHTML = `<div class="alert alert-success">✅ All readings normal</div>`;
   }
@@ -81,17 +92,32 @@ function checkAlerts(heartRate, temperature, sugarLevel) {
 function initCharts() {
   heartRateChart = new Chart(document.getElementById("heartRateChart"), {
     type: "line",
-    data: { labels: [], datasets: [{ label: "Heart Rate", data: [], borderColor: "red", fill: false }] }
+    data: {
+      labels: [],
+      datasets: [
+        { label: "Heart Rate", data: [], borderColor: "red", fill: false },
+      ],
+    },
   });
 
   tempChart = new Chart(document.getElementById("tempChart"), {
     type: "line",
-    data: { labels: [], datasets: [{ label: "Temperature", data: [], borderColor: "orange", fill: false }] }
+    data: {
+      labels: [],
+      datasets: [
+        { label: "Temperature", data: [], borderColor: "orange", fill: false },
+      ],
+    },
   });
 
   sugarChart = new Chart(document.getElementById("sugarChart"), {
     type: "line",
-    data: { labels: [], datasets: [{ label: "Sugar Level", data: [], borderColor: "blue", fill: false }] }
+    data: {
+      labels: [],
+      datasets: [
+        { label: "Sugar Level", data: [], borderColor: "blue", fill: false },
+      ],
+    },
   });
 }
 
