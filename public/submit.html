@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit Health Readings</title>
+
+<link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-body">
+      <h2 class="text-center mb-4">Submit Smart Chair Readings</h2>
+
+      <form id="healthForm">
+        <div class="mb-3">
+          <label class="form-label">Heart Rate (BPM)</label>
+          <input type="number" id="heartRateInput" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Temperature (°C)</label>
+          <input type="number" id="tempInput" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Sugar Level (mg/dL)</label>
+          <input type="number" id="sugarInput" class="form-control" required>
+        </div>
+
+        <button class="btn btn-primary w-100">Submit Reading</button>
+      </form>
+
+      <a href="index.html" class="btn btn-secondary w-100 mt-3">Back to Dashboard</a>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById("healthForm");
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const reading = {
+    heartRate: document.getElementById("heartRateInput").value,
+    temperature: document.getElementById("tempInput").value,
+    sugar: document.getElementById("sugarInput").value,
+    time: new Date().toLocaleString()
+  };
+
+  let readings = JSON.parse(localStorage.getItem("chairReadings")) || [];
+  readings.push(reading);
+  localStorage.setItem("chairReadings", JSON.stringify(readings));
+
+  alert("Reading submitted successfully!");
+  form.reset();
+});
+</script>
+
+</body>
+</html>
